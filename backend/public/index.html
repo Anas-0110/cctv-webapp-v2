@@ -190,65 +190,6 @@ function normalizeYellowList(list) {
       yEl.style.top  = `${fy * rect.height}px`;
     }
 
-function makeDraggableRed(marker) {
-  let dragging = false, moved = false;
-  marker.addEventListener("mousedown", e => {
-    if (e.button !== 0) return;
-    dragging = true;
-    moved = false;
-    e.preventDefault();
-  });
-
-  document.addEventListener("mousemove", e => {
-    if (!dragging) return;
-    const lrect = layout.getBoundingClientRect();
-    let fx = (e.clientX - lrect.left) / lrect.width;
-    let fy = (e.clientY - lrect.top) / lrect.height;
-    fx = Math.min(Math.max(fx, 0), 1);
-    fy = Math.min(Math.max(fy, 0), 1);
-
-    marker.dataset.fx = fx;
-    marker.dataset.fy = fy;
-    positionMarker(marker, fx, fy);
-    moved = true;
-  });
-
-  document.addEventListener("mouseup", () => {
-    if (!dragging) return;
-    dragging = false;
-    if (moved) saveMarkers(); // save after drag
-  });
-}
-
-    // ---- Enable dragging for yellow cone markers ----
-function makeDraggableRed(marker) {
-  let isDragging = false;
-  let offsetX, offsetY;
-
-  marker.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    offsetX = e.clientX - marker.offsetLeft;
-    offsetY = e.clientY - marker.offsetTop;
-    e.preventDefault();
-  });
-
-  window.addEventListener("mousemove", (e) => {
-    if (isDragging) {
-      marker.style.left = e.clientX - offsetX + "px";
-      marker.style.top = e.clientY - offsetY + "px";
-    }
-  });
-
-  window.addEventListener("mouseup", () => {
-    isDragging = false;
-  });
-}
-
-// Apply to all yellow markers
-document.querySelectorAll(".marker.yellow").forEach((marker) => {
-  makeDraggableRed(marker);
-});
-
 // ---- Enable rotation for yellow cone markers ----
 function enableYellowRotation(yEl) {
   let isRotating = false;

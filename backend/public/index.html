@@ -190,6 +190,45 @@ function normalizeYellowList(list) {
       yEl.style.top  = `${fy * rect.height}px`;
     }
 
+function makeDraggableRed(marker) {
+  let dragging = false, offsetX = 0, offsetY = 0;
+
+  marker.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    dragging = true;
+    const rect = marker.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    const lrect = layout.getBoundingClientRect();
+    let fx = (e.clientX - lrect.left) / lrect.width;
+    let fy = (e.clientY - lrect.top) / lrect.height;
+
+    fx = Math.min(Math.max(fx, 0), 1);
+    fy = Math.min(Math.max(fy, 0), 1);
+
+    marker.dataset.fx = fx;
+    marker.dataset.fy = fy;
+    positionMarker(marker, fx, fy);
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    saveMarkers(); // <-- persist the new position to server
+  });
+}
+
+// Apply to all yellow markers
+document.querySelectorAll(".marker.yellow").forEach((marker) => {
+  makeDraggableRed(marker);
+});
+
 // ---- Enable rotation for yellow cone markers ----
 function enableYellowRotation(yEl) {
   let isRotating = false;

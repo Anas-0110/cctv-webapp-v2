@@ -479,14 +479,13 @@ function applyConeStyle(yEl, w, h, rot) {
   y.style.height = `${size}px`;
   y.style.borderRadius = "50%";
 
-  // 🔥 Reset any leftover cone styles
-  y.style.border = "none";
-  y.style.borderLeft = "none";
-  y.style.borderRight = "none";
-  y.style.borderBottom = "none";
-
   // 🔵 Apply full blue fill
   y.style.background = "rgba(0, 0, 255, 0.1)";
+  
+  // ✨ Add jagged/dashed outline like the cone
+  y.style.outline = "2px dashed black";
+  y.style.outlineOffset = "-2px";
+
   y.style.transform = "translate(-50%, -50%)";
 
   // 🔥 Store size in dataset so saveMarkers can pick it up

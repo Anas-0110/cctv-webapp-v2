@@ -823,31 +823,44 @@ function handleDoubleRightClick(target, isRed) {
         saveMarkers();
       }
     } else if (action.toLowerCase() === "s") {
-      // Resize logic
-      if (target.dataset.type === "cone") {
+    // Resize logic
+    const idx = parseInt(target.dataset.index, 10);
+    if (target.dataset.type === "cone") {
         const newHeight = parseInt(prompt("Enter new cone height:", target.dataset.height || "40"));
         const newWidth  = parseInt(prompt("Enter new cone width:",  target.dataset.width  || "20"));
         const w = !isNaN(newWidth)  && newWidth  > 0 ? newWidth  : Number(target.dataset.width)  || 20;
         const h = !isNaN(newHeight) && newHeight > 0 ? newHeight : Number(target.dataset.height) || 40;
         const rot = Number(target.dataset.rotation) || 0;
         applyConeStyle(target, w, h, rot);
-        list[idx].width = w;
-        list[idx].height = h;
-      } else if (target.dataset.type === "circle") {
-        // Circle resize - stays solid blue
-        const newSize = parseInt(prompt("Enter new circle diameter:", target.dataset.width || "50"));
-        const size = !isNaN(newSize) && newSize > 0 ? newSize : Number(target.dataset.width) || 50;
+        if (!isNaN(idx) && currentRedMarker) {
+            const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
+            list[idx].width = w;
+            list[idx].height = h;
+            currentRedMarker.dataset.yellow = JSON.stringify(list);
+        }
+    } else if (target.dataset.type === "circle") {
+        // Circle resize - ask for diameter
+        const newDiameter = parseInt(prompt("Enter new circle diameter:", target.dataset.width || "50"));
+        const size = !isNaN(newDiameter) && newDiameter > 0 ? newDiameter : Number(target.dataset.width) || 50;
         target.style.width = `${size}px`;
         target.style.height = `${size}px`;
         target.style.borderRadius = "50%";
         target.style.background = "rgba(0, 0, 255, 0.7)";
         target.dataset.width = size;
         target.dataset.height = size;
-      }
 
-      currentRedMarker.dataset.yellow = JSON.stringify(list);
-      saveMarkers();
-    } else if (action.toLowerCase() === "d") {
+        // 🔥 Save to currentRedMarker yellow list
+        if (!isNaN(idx) && currentRedMarker) {
+            const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
+            list[idx].width = size;
+            list[idx].height = size;
+            currentRedMarker.dataset.yellow = JSON.stringify(list);
+        }
+    }
+
+    if (currentRedMarker) saveMarkers(); // persist changes
+}
+ else if (action.toLowerCase() === "d") {
       list.splice(idx, 1);
       currentRedMarker.dataset.yellow = JSON.stringify(list);
       target.remove();

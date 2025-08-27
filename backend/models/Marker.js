@@ -12,7 +12,8 @@ const markerSchema = new mongoose.Schema({
       fy: Number,
       width: { type: Number, default: 20 },    // ✅ added
       height: { type: Number, default: 40 },   // ✅ added
-      rotation: { type: Number, default: 0 }   // ✅ NEW
+      rotation: { type: Number, default: 0 },   // ✅ NEW
+      type: { type: String, enum: ["cone","circle"], default: "cone" }
     }
   ]
 });

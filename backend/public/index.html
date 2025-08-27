@@ -149,6 +149,7 @@
     const addMarkerButton = document.getElementById("addMarkerButton");
 
     let scale = 1;
+    let isAuthorized = false; // 🔒 viewer-only by default
     const minScale = 1;
     const maxScale = 5;
     let panX = 0, panY = 0;
@@ -194,12 +195,20 @@ function normalizeYellowList(list) {
       let dragging = false, moved = false;
       marker.addEventListener("mousedown", e => {
         if (e.button !== 0) return; // only left mouse button
+        // 🔒 Prompt password on drag
+        const PASSWORD = "Anasikhwan2001_";
+        const input = prompt("Enter password to drag this red marker:");
+        if (input !== PASSWORD) {
+        alert("Incorrect password! Cannot drag marker.");
+        return;
+      }
         dragging = true;
         moved = false;
         e.preventDefault();
       });
 
       document.addEventListener("mousemove", e => {
+        if (!isAuthorized) return;
         if (!dragging) return;
         const lrect = layoutRect();
         const px = Math.min(Math.max(e.clientX, lrect.left), lrect.right);
@@ -212,6 +221,7 @@ function normalizeYellowList(list) {
         moved = true;
       });
       document.addEventListener("mouseup", () => {
+        if (!isAuthorized) return;
         if (dragging) {
           dragging = false;
           if (moved) saveMarkers();
@@ -255,6 +265,7 @@ function enableYellowRotation(yEl) {
   let startRotation = 0;
 
   yEl.addEventListener("mousedown", e => {
+    if (!isAuthorized) return;
     if (!e.shiftKey) return; // hold SHIFT to rotate
     e.preventDefault();
     const rect = yEl.getBoundingClientRect();
@@ -269,6 +280,7 @@ function enableYellowRotation(yEl) {
   });
 
   window.addEventListener("mousemove", e => {
+    if (!isAuthorized) return;
     if (!isRotating) return;
     const dx = e.clientX - centerX;
     const dy = e.clientY - centerY;
@@ -290,6 +302,7 @@ function enableYellowRotation(yEl) {
   });
 
   window.addEventListener("mouseup", () => {
+    if (!isAuthorized) return;
     if (isRotating) {
       isRotating = false;
       saveMarkers(); // save new rotation to backend
@@ -305,11 +318,13 @@ document.querySelectorAll(".marker.yellow").forEach((marker) => {
 // ---- Right-click menu for cones ----
 function addContextMenu(marker) {
   marker.addEventListener("contextmenu", (e) => {
+    if (!isAuthorized) return;
     e.preventDefault(); // disable browser context menu
   });
 
   let clickCount = 0;
   marker.addEventListener("mousedown", (e) => {
+    if (!isAuthorized) return;
     if (e.button === 2) { // Right-click
       clickCount++;
       if (clickCount === 2) {
@@ -414,6 +429,7 @@ function makeYellowDraggable(yEl) {
   let dragging = false, moved = false, offsetX = 0, offsetY = 0;
 
   yEl.addEventListener("mousedown", (e) => {
+    if (!isAuthorized) return;
     if (e.button !== 0) return; // left click only
     dragging = true;
     moved = false;
@@ -424,6 +440,7 @@ function makeYellowDraggable(yEl) {
   });
 
   document.addEventListener("mousemove", (e) => {
+    if (!isAuthorized) return;
     if (!dragging) return;
     const rect = imageView.getBoundingClientRect();
     let px = e.clientX - rect.left - offsetX;
@@ -438,6 +455,7 @@ function makeYellowDraggable(yEl) {
   });
 
   document.addEventListener("mouseup", () => {
+    if (!isAuthorized) return;
     if (!dragging) return;
     dragging = false;
     if (moved && currentRedMarker) {
@@ -514,27 +532,38 @@ function applyConeStyle(yEl, w, h, rot) {
 }
 
 
-    addMarkerButton.addEventListener("click", () => {
-      if (!currentRedMarker) {
-        const defaultName = "cam" + (markersLayer.children.length + 1) + ".jpg";
-        const imgName = prompt("Enter main image filename for this CCTV:", defaultName);
-        if (!imgName) return; // cancel pressed, stop
-        createRedMarker(0.5, 0.5, imgName, []);
-        saveMarkers();
-      } else {
-        const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
-        const defaultYellow = "cam" + (list.length + 2) + ".jpg";
-        const yimg = prompt("Enter yellow camera image filename:", defaultYellow);
-        if (!yimg) return; // cancel pressed, stop
-        const fovType = prompt("Enter FOV type: 'cone' or 'circle'", "cone");
-        if (!fovType) return; // cancel pressed, stop
-        const newObj = { image: yimg, fx: 0.5, fy: 0.6, type: fovType };
-        list.push(newObj);
-        currentRedMarker.dataset.yellow = JSON.stringify(list);
-        createYellowMarker(newObj, list.length - 1);
-        saveMarkers();
-      }
-    });
+ addMarkerButton.addEventListener("click", () => {
+  const PASSWORD = "Anasikhwan2001_"; // set your password
+
+  // Ask for password first
+  const input = prompt("Enter password to add marker:");
+  if (input !== PASSWORD) {
+    alert("Incorrect password! Access denied.");
+    return; // stop execution if wrong
+  }
+  isAuthorized = true;
+
+  // --- Existing logic below stays the same ---
+  if (!currentRedMarker) {
+    const defaultName = "cam" + (markersLayer.children.length + 1) + ".jpg";
+    const imgName = prompt("Enter main image filename for this CCTV:", defaultName);
+    if (!imgName) return; // cancel pressed
+    createRedMarker(0.5, 0.5, imgName, []);
+    saveMarkers();
+  } else {
+    const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
+    const defaultYellow = "cam" + (list.length + 2) + ".jpg";
+    const yimg = prompt("Enter yellow camera image filename:", defaultYellow);
+    if (!yimg) return; // cancel pressed
+    const fovType = prompt("Enter FOV type: 'cone' or 'circle'", "cone");
+    if (!fovType) return; // cancel pressed
+    const newObj = { image: yimg, fx: 0.5, fy: 0.6, type: fovType };
+    list.push(newObj);
+    currentRedMarker.dataset.yellow = JSON.stringify(list);
+    createYellowMarker(newObj, list.length - 1);
+    saveMarkers();
+  }
+});
 
     backButton.addEventListener("click", () => {
       if (currentView === "yellow") {
@@ -653,6 +682,7 @@ function applyConeStyle(yEl, w, h, rot) {
     /* === ADD-ON: Double-click Rename Feature (fixed single-click open) === */
 (function enableSmartDoubleClickRename() {
   function renameRed(m) {
+    if (!isAuthorized) return;
     const labelEl = m.querySelector(".marker-label");
     const oldName = (labelEl && labelEl.textContent) || (m.dataset.image || "").replace(/\.[^/.]+$/, "");
     const newName = prompt("Rename this red marker:", oldName);
@@ -666,6 +696,7 @@ function applyConeStyle(yEl, w, h, rot) {
   }
 
   function renameYellow(y) {
+    if (!isAuthorized) return;
     const labelEl = y.querySelector(".marker-label");
     const oldName = (labelEl && labelEl.textContent) || (y.dataset.image || "").replace(/\.[^/.]+$/, "");
     const newName = prompt("Rename this yellow marker:", oldName);
@@ -787,6 +818,7 @@ function applyConeStyle(yEl, w, h, rot) {
   let lastRightClick = 0;
 
 function handleDoubleRightClick(target, isRed) {
+  if (!isAuthorized) return;
   if (isRed) {
     // RED marker logic
     const action = prompt("Type 'r' to Rename or 'd' to Delete this red marker:", "r");

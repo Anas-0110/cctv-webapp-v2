@@ -190,36 +190,38 @@ function normalizeYellowList(list) {
       yEl.style.top  = `${fy * rect.height}px`;
     }
 
-    function makeDraggable(marker) {
-      let dragging = false, moved = false;
-      marker.addEventListener("mousedown", e => {
-        if (e.button !== 0) return; // only left mouse button
-        dragging = true;
-        moved = false;
-        e.preventDefault();
-      });
+function makeDraggableRed(marker) {
+  let dragging = false, moved = false;
+  marker.addEventListener("mousedown", e => {
+    if (e.button !== 0) return;
+    dragging = true;
+    moved = false;
+    e.preventDefault();
+  });
 
-      document.addEventListener("mousemove", e => {
-        if (!dragging) return;
-        const lrect = layoutRect();
-        const px = Math.min(Math.max(e.clientX, lrect.left), lrect.right);
-        const py = Math.min(Math.max(e.clientY, lrect.top), lrect.bottom);
-        const fx = (px - lrect.left) / lrect.width;
-        const fy = (py - lrect.top) / lrect.height;
-        marker.dataset.fx = fx;
-        marker.dataset.fy = fy;
-        positionMarker(marker, fx, fy);
-        moved = true;
-      });
-      document.addEventListener("mouseup", () => {
-        if (dragging) {
-          dragging = false;
-          if (moved) saveMarkers();
-        }
-      });
-    }
+  document.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    const lrect = layout.getBoundingClientRect();
+    let fx = (e.clientX - lrect.left) / lrect.width;
+    let fy = (e.clientY - lrect.top) / lrect.height;
+    fx = Math.min(Math.max(fx, 0), 1);
+    fy = Math.min(Math.max(fy, 0), 1);
+
+    marker.dataset.fx = fx;
+    marker.dataset.fy = fy;
+    positionMarker(marker, fx, fy);
+    moved = true;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    if (moved) saveMarkers(); // save after drag
+  });
+}
+
     // ---- Enable dragging for yellow cone markers ----
-function makeDraggable(marker) {
+function makeDraggableRed(marker) {
   let isDragging = false;
   let offsetX, offsetY;
 
@@ -244,7 +246,7 @@ function makeDraggable(marker) {
 
 // Apply to all yellow markers
 document.querySelectorAll(".marker.yellow").forEach((marker) => {
-  makeDraggable(marker);
+  makeDraggableRed(marker);
 });
 
 // ---- Enable rotation for yellow cone markers ----
@@ -385,7 +387,7 @@ document.querySelectorAll(".marker.yellow").forEach((marker) => {
       m.dataset.yellow = JSON.stringify(yellowImages);
       markersLayer.appendChild(m);
       positionMarker(m, fx, fy);
-      makeDraggable(m);
+      makeDraggableRed(m);
 
       const label = document.createElement("span");
       label.className = "marker-label";

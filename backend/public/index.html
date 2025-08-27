@@ -488,22 +488,25 @@ function applyConeStyle(yEl, w, h, rot) {
     applyConeStyle(y, w, h, rot);
     enableYellowRotation(y);
   } else if (y.dataset.type === "circle") {
-    const size = obj.width || 50; // use width as diameter
-    y.style.width = `${size}px`;
-    y.style.height = `${size}px`;
-    y.style.borderRadius = "50%";
+  const size = obj.width || 50; // use width as diameter
+  y.style.width = `${size}px`;
+  y.style.height = `${size}px`;
+  y.style.borderRadius = "50%";
 
-    // 🔥 Reset any leftover cone styles
-    y.style.border = "none";
-    y.style.borderLeft = "none";
-    y.style.borderRight = "none";
-    y.style.borderBottom = "none";
+  // 🔥 Reset any leftover cone styles
+  y.style.border = "none";
+  y.style.borderLeft = "none";
+  y.style.borderRight = "none";
+  y.style.borderBottom = "none";
 
-    // 🔵 Apply full blue fill
-    y.style.background = "rgba(0, 0, 255, 0.7)";
-    y.style.transform = "translate(-50%, -50%)";
+  // 🔵 Apply full blue fill
+  y.style.background = "rgba(0, 0, 255, 0.7)";
+  y.style.transform = "translate(-50%, -50%)";
+
+  // 🔥 Store size in dataset so saveMarkers can pick it up
+  y.dataset.width = size;
+  y.dataset.height = size;
 }
-
   positionYellowDom(y, obj.fx, obj.fy);
 
   makeYellowDraggable(y);

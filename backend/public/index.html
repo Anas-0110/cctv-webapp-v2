@@ -274,14 +274,25 @@ function enableYellowRotation(yEl) {
     const dy = e.clientY - centerY;
     const angle = Math.atan2(dy, dx);
     const deg = startRotation + (angle - startAngle) * (180 / Math.PI);
+
     yEl.style.transform = `rotate(${deg}deg)`;
     yEl.dataset.rotation = deg;
+
+    // 🔥 Update rotation in currentRedMarker yellow list
+    if (currentRedMarker) {
+      const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
+      const idx = parseInt(yEl.dataset.index, 10);
+      if (!isNaN(idx) && list[idx]) {
+        list[idx].rotation = deg;
+        currentRedMarker.dataset.yellow = JSON.stringify(list);
+      }
+    }
   });
 
   window.addEventListener("mouseup", () => {
     if (isRotating) {
       isRotating = false;
-      saveMarkers(); // save new rotation
+      saveMarkers(); // save new rotation to backend
     }
   });
 }

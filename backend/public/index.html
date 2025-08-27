@@ -52,24 +52,19 @@
     .red { background: red; }
     /* Cone-shaped yellow marker (triangle) */
 .marker.yellow {
-  /* override the circle from .marker */
-  width: 0;
-  height: 0;
-  border-radius: 0;
-  box-shadow: none;
-
   position: absolute;
   cursor: pointer;
   z-index: 6;
   pointer-events: auto;
 
-  /* triangle made with borders */
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 40px solid rgba(255, 255, 0, 0.6);
-
-  /* rotate from the tip */
-  transform-origin: 50% 100%;
+  /* Remove old border-triangle stuff */
+  width: auto;
+  height: auto;
+  border: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 0;
 }
 
     .marker-label {
@@ -441,10 +436,19 @@ function applyConeStyle(yEl, w, h, rot) {
   yEl.dataset.height = h;
   yEl.dataset.rotation = rot;
 
-  // Apply styles
-  yEl.style.borderLeft = `${w}px solid transparent`;
-  yEl.style.borderRight = `${w}px solid transparent`;
-  yEl.style.borderBottom = `${h}px solid rgba(255, 255, 0, 0.6)`;
+  // Apply new triangle with jagged outline
+  yEl.style.width = `${w}px`;
+  yEl.style.height = `${h}px`;
+  yEl.style.background = 'rgba(255, 255, 0, 0.3)';
+
+  // Use clip-path to make triangle
+  yEl.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)';
+
+  // Jagged/dashed outline
+  yEl.style.outline = '2px dashed black';
+  yEl.style.outlineOffset = '-2px';
+
+  // Allow rotation
   yEl.style.transform = `rotate(${rot}deg)`;
 }
 
@@ -482,7 +486,7 @@ function applyConeStyle(yEl, w, h, rot) {
   y.style.borderBottom = "none";
 
   // 🔵 Apply full blue fill
-  y.style.background = "rgba(0, 0, 255, 0.7)";
+  y.style.background = "rgba(0, 0, 255, 0.1)";
   y.style.transform = "translate(-50%, -50%)";
 
   // 🔥 Store size in dataset so saveMarkers can pick it up

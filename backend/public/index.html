@@ -517,14 +517,17 @@ function applyConeStyle(yEl, w, h, rot) {
     addMarkerButton.addEventListener("click", () => {
       if (!currentRedMarker) {
         const defaultName = "cam" + (markersLayer.children.length + 1) + ".jpg";
-        const imgName = prompt("Enter main image filename for this CCTV:", defaultName) || defaultName;
+        const imgName = prompt("Enter main image filename for this CCTV:", defaultName);
+        if (!imgName) return; // cancel pressed, stop
         createRedMarker(0.5, 0.5, imgName, []);
         saveMarkers();
       } else {
         const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
         const defaultYellow = "cam" + (list.length + 2) + ".jpg";
-        const yimg = prompt("Enter yellow camera image filename:", defaultYellow) || defaultYellow;
-        const fovType = prompt("Enter FOV type: 'cone' or 'circle'", "cone") || "cone";
+        const yimg = prompt("Enter yellow camera image filename:", defaultYellow);
+        if (!yimg) return; // cancel pressed, stop
+        const fovType = prompt("Enter FOV type: 'cone' or 'circle'", "cone");
+        if (!fovType) return; // cancel pressed, stop
         const newObj = { image: yimg, fx: 0.5, fy: 0.6, type: fovType };
         list.push(newObj);
         currentRedMarker.dataset.yellow = JSON.stringify(list);

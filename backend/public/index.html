@@ -51,24 +51,17 @@
     }
     .red { background: red; }
     /* Cone-shaped yellow marker (triangle) */
+/* Trapezoid-shaped yellow marker */
 .marker.yellow {
-  /* override the circle from .marker */
-  width: 0;
-  height: 0;
+  width: 40px;    /* bottom width (default) */
+  height: 40px;   /* height (default) */
+  background: rgba(255, 255, 0, 0.3);
   border-radius: 0;
-  box-shadow: none;
-
   position: absolute;
   cursor: pointer;
   z-index: 6;
   pointer-events: auto;
-
-  /* triangle made with borders */
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 40px solid rgba(255, 255, 0, 1);
-
-  /* rotate from the tip */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
   transform-origin: 50% 100%;
 }
 
@@ -435,17 +428,18 @@ function makeYellowDraggable(yEl) {
   });
 }
 
-function applyConeStyle(yEl, w, h, rot) {
-  // Save in dataset
-  yEl.dataset.width = w;
-  yEl.dataset.height = h;
+function applyConeStyle(yEl, bottomWidth, height, rot) {
+  yEl.dataset.width = bottomWidth;
+  yEl.dataset.height = height;
   yEl.dataset.rotation = rot;
 
-  // Apply styles
-  yEl.style.borderLeft = `${w}px dashed transparent`;
-  yEl.style.borderRight = `${w}px dashed transparent`;
-  yEl.style.borderBottom = `${h}px dashed rgba(255, 255, 0, 0.3)`;
+  yEl.style.width = `${bottomWidth}px`;
+  yEl.style.height = `${height}px`;
+  yEl.style.background = "rgba(255, 255, 0, 0.3)";
+  yEl.style.clipPath = "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)";
+  yEl.style.transformOrigin = "50% 100%";
   yEl.style.transform = `rotate(${rot}deg)`;
+  yEl.style.border = "none"; // remove old triangle borders
 }
 
     function createYellowMarker(obj, index) {

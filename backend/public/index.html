@@ -61,7 +61,7 @@
   cursor: pointer;
   z-index: 6;
   pointer-events: auto;
-  clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
   transform-origin: 50% 100%;
 }
 
@@ -436,7 +436,7 @@ function applyConeStyle(yEl, bottomWidth, height, rot) {
   yEl.style.width = `${bottomWidth}px`;
   yEl.style.height = `${height}px`;
   yEl.style.background = "rgba(255, 255, 0, 0.3)";
-  yEl.style.clipPath = "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)";
+  yEl.style.clipPath = "polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)";
   yEl.style.transformOrigin = "50% 100%";
   yEl.style.transform = `rotate(${rot}deg)`;
   yEl.style.border = "none"; // remove old triangle borders
@@ -491,7 +491,7 @@ function applyConeStyle(yEl, bottomWidth, height, rot) {
 
 
  addMarkerButton.addEventListener("click", () => {
-  const PASSWORD = "Anasikhwan2001_"; // set your password
+  const PASSWORD = "anas"; // set your password
 
   // Ask for password first
   const input = prompt("Enter password to add marker:");

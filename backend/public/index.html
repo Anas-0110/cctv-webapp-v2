@@ -55,7 +55,7 @@
 .marker.yellow {
   width: 40px;    /* bottom width (default) */
   height: 40px;   /* height (default) */
-  background: rgba(255, 255, 0, 0.3);
+  background: rgba(255, 255, 0, 0.1);
   border-radius: 0;
   position: absolute;
   cursor: pointer;
@@ -442,7 +442,7 @@ function applyConeStyle(yEl, bottomWidth, height, rot) {
   yEl.style.border = "none"; // remove old triangle borders
 }
 
-    function createYellowMarker(obj, index) {
+function createYellowMarker(obj, index) {
   const y = document.createElement("div");
   y.className = "marker yellow";
   y.dataset.index = index;
@@ -464,31 +464,26 @@ function applyConeStyle(yEl, bottomWidth, height, rot) {
     applyConeStyle(y, w, h, rot);
     enableYellowRotation(y);
   } else if (y.dataset.type === "circle") {
-  const size = obj.width || 50; // use width as diameter
-  y.style.width = `${size}px`;
-  y.style.height = `${size}px`;
-  y.style.borderRadius = "50%";
+    const size = obj.width || 50; // enforce diameter
+    y.style.width = `${size}px`;
+    y.style.height = `${size}px`;
+    y.style.borderRadius = "50%";
 
-  // 🔥 Reset any leftover cone styles
-  y.style.border = "none";
-  y.style.borderLeft = "none";
-  y.style.borderRight = "none";
-  y.style.borderBottom = "none";
+    // 🔥 Ensure no leftover cone styles
+    y.style.clipPath = "none";
+    y.style.border = "none";
+    y.style.background = "rgba(0, 0, 255, 0.1)";
+    y.style.transform = "translate(-50%, -50%)";
 
-  // 🔵 Apply full blue fill
-  y.style.background = "rgba(0, 0, 255, 0.1)";
-  y.style.transform = "translate(-50%, -50%)";
+    // store size in dataset
+    y.dataset.width = size;
+    y.dataset.height = size;
+  }
 
-  // 🔥 Store size in dataset so saveMarkers can pick it up
-  y.dataset.width = size;
-  y.dataset.height = size;
-}
   positionYellowDom(y, obj.fx, obj.fy);
-
   makeYellowDraggable(y);
   return y;
 }
-
 
  addMarkerButton.addEventListener("click", () => {
   const PASSWORD = "anas"; // set your password
@@ -773,87 +768,102 @@ function applyConeStyle(yEl, bottomWidth, height, rot) {
   let lastRightClick = 0;
 
 function handleDoubleRightClick(target, isRed) {
+  // helper: keep .jpg if user didn't include an extension
+  const ensureExt = (name) => (name && name.includes(".") ? name : name + ".jpg");
+
   if (isRed) {
-    // RED marker logic
+    // RED marker logic (rename / delete)
     const action = prompt("Type 'r' to Rename or 'd' to Delete this red marker:", "r");
     if (!action) return;
+    const a = action.toLowerCase();
 
-    if (action.toLowerCase() === "r") {
-      const newName = prompt("Enter new name:", target.dataset.image);
-      if (newName) {
-        target.dataset.image = newName;
+    if (a === "r") {
+      const newName = prompt("Enter new name:", target.dataset.image || "");
+      if (newName && newName.trim() !== "") {
+        const newImage = ensureExt(newName.trim());
+        target.dataset.image = newImage;
         const labelEl = target.querySelector(".marker-label");
-        if (labelEl) labelEl.textContent = newName.replace(/\.[^/.]+$/, "");
+        if (labelEl) labelEl.textContent = newImage.replace(/\.[^/.]+$/, "");
         if (currentView === "red" && currentRedMarker === target) camImage.src = target.dataset.image;
         saveMarkers();
       }
-    } else if (action.toLowerCase() === "d") {
+    } else if (a === "d") {
       if (confirm("Delete this marker?")) {
         target.remove();
         saveMarkers();
       }
     }
-  } else {
-    // YELLOW marker logic
-    const action = prompt("Type 'r' to Rename, 's' to Resize, or 'd' to Delete this yellow marker:", "r");
-    const idx = parseInt(target.dataset.index, 10);
-    if (isNaN(idx) || !currentRedMarker) return;
+    return;
+  }
 
-    const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
+  // YELLOW marker logic (rename / resize / delete)
+  const action = prompt("Type 'r' to Rename, 's' to Resize, or 'd' to Delete this yellow marker:", "r");
+  if (!action) return;
+  const a = action.toLowerCase();
+  const idx = parseInt(target.dataset.index, 10);
+  if (isNaN(idx) || !currentRedMarker) return;
 
-    if (action.toLowerCase() === "r") {
-      const newName = prompt("Enter new name:", target.dataset.image);
-      if (newName) {
-        target.dataset.image = newName;
-        const labelEl = target.querySelector(".marker-label");
-        if (labelEl) labelEl.textContent = newName.replace(/\.[^/.]+$/, "");
-        list[idx].image = target.dataset.image;
-        currentRedMarker.dataset.yellow = JSON.stringify(list);
-        saveMarkers();
-      }
-    } else if (action.toLowerCase() === "s") {
-    // Resize logic
-    const idx = parseInt(target.dataset.index, 10);
-    if (target.dataset.type === "cone") {
-        const newHeight = parseInt(prompt("Enter new cone height:", target.dataset.height || "40"));
-        const newWidth  = parseInt(prompt("Enter new cone width:",  target.dataset.width  || "20"));
-        const w = !isNaN(newWidth)  && newWidth  > 0 ? newWidth  : Number(target.dataset.width)  || 20;
-        const h = !isNaN(newHeight) && newHeight > 0 ? newHeight : Number(target.dataset.height) || 40;
-        const rot = Number(target.dataset.rotation) || 0;
-        applyConeStyle(target, w, h, rot);
-        if (!isNaN(idx) && currentRedMarker) {
-            const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
-            list[idx].width = w;
-            list[idx].height = h;
-            currentRedMarker.dataset.yellow = JSON.stringify(list);
-        }
-    } else if (target.dataset.type === "circle") {
-        // Circle resize - ask for diameter
-        const newDiameter = parseInt(prompt("Enter new circle diameter:", target.dataset.width || "50"));
-        const size = !isNaN(newDiameter) && newDiameter > 0 ? newDiameter : Number(target.dataset.width) || 50;
-        target.style.width = `${size}px`;
-        target.style.height = `${size}px`;
-        target.style.borderRadius = "50%";
-        target.style.background = "rgba(0, 0, 255, 0.7)";
-        target.dataset.width = size;
-        target.dataset.height = size;
+  // load normalized list (defensive)
+  let list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
 
-        // 🔥 Save to currentRedMarker yellow list
-        if (!isNaN(idx) && currentRedMarker) {
-            const list = normalizeYellowList(JSON.parse(currentRedMarker.dataset.yellow || "[]"));
-            list[idx].width = size;
-            list[idx].height = size;
-            currentRedMarker.dataset.yellow = JSON.stringify(list);
-        }
+  if (a === "r") {
+    const newName = prompt("Enter new name:", target.dataset.image || "");
+    if (newName && newName.trim() !== "") {
+      const newImage = ensureExt(newName.trim());
+      target.dataset.image = newImage;
+      const labelEl = target.querySelector(".marker-label");
+      if (labelEl) labelEl.textContent = newImage.replace(/\.[^/.]+$/, "");
+      list = normalizeYellowList(list);
+      list[idx].image = newImage;
+      currentRedMarker.dataset.yellow = JSON.stringify(list);
+      saveMarkers();
     }
+  } else if (a === "s") {
+    // Resize logic
+    if (target.dataset.type === "cone") {
+      const newHeight = parseInt(prompt("Enter new cone height:", target.dataset.height || "40"), 10);
+      const newWidth  = parseInt(prompt("Enter new cone width:",  target.dataset.width  || "20"), 10);
+      const w = (!isNaN(newWidth) && newWidth > 0) ? newWidth : Number(target.dataset.width) || 20;
+      const h = (!isNaN(newHeight) && newHeight > 0) ? newHeight : Number(target.dataset.height) || 40;
+      const rot = Number(target.dataset.rotation) || 0;
+      applyConeStyle(target, w, h, rot);
+      // ensure dataset is consistent
+      target.dataset.width = w;
+      target.dataset.height = h;
 
-    if (currentRedMarker) saveMarkers(); // persist changes
-}
- else if (action.toLowerCase() === "d") {
+      // persist to list
+      list = normalizeYellowList(list);
+      list[idx].width = w;
+      list[idx].height = h;
+      currentRedMarker.dataset.yellow = JSON.stringify(list);
+      saveMarkers();
+    } else if (target.dataset.type === "circle") {
+      // Circle resize - enforce perfect circle
+      const newDiameter = parseInt(prompt("Enter new circle diameter:", target.dataset.width || "50"), 10);
+      const size = (!isNaN(newDiameter) && newDiameter > 0) ? newDiameter : Number(target.dataset.width) || 50;
+
+      target.style.width = `${size}px`;
+      target.style.height = `${size}px`;
+      target.style.borderRadius = "50%";       // enforce perfect circle
+      target.style.clipPath = "none";          // remove cone clip-path
+      target.style.background = "rgba(0, 0, 255, 0.1)";
+
+      target.dataset.width = size;
+      target.dataset.height = size;
+
+      // persist to list
+      list = normalizeYellowList(list);
+      list[idx].width = size;
+      list[idx].height = size;
+      currentRedMarker.dataset.yellow = JSON.stringify(list);
+      saveMarkers();
+    }
+  } else if (a === "d") {
+    if (confirm("Delete this marker?")) {
       list.splice(idx, 1);
       currentRedMarker.dataset.yellow = JSON.stringify(list);
       target.remove();
-      // Reindex remaining yellow markers
+      // Reindex remaining yellow markers' dataset.index
       document.querySelectorAll("#imageView .marker.yellow").forEach((y, i) => y.dataset.index = i);
       saveMarkers();
     }
